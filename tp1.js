@@ -4,9 +4,9 @@ let colorLineaMedio1, colorLineaMedio2, colorLineaMedio3, colorLineaMedio4, colo
 let colorLineaAbajo1, colorLineaAbajo2, colorLineaAbajo3, colorLineaAbajo4, colorLineaAbajo5, colorLineaAbajo6, colorLineaAbajo7, colorLineaAbajo8, colorLineaAbajo9, colorLineaAbajo10, colorLineaAbajo11, colorLineaAbajo12;
 let colorAz1, colorAz2, colorAz3, colorAm1, colorAm2, colorAm3, colorNar1, colorNar2, colorNar3;
 
-let posXFondo = 400;
-let posXCirculos = 426;
-let posYCirculos = 234;
+let posXFondo = 0;
+let posXCuadrados = 26;
+let posYCuadrados = 83;
 
 
 function preload() {
@@ -14,7 +14,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas (800, 400);
+  createCanvas (400, 400);
   background('#222222');
 
   colorLineaArriba1 = color (113, 133, 103);
@@ -59,10 +59,9 @@ function setup() {
 
 function draw() {
   fondoRayado();
-  tresCirculos();
+  cuadrados();
   push();
   rotate(0.0046);
-  image(obra, 0, 0, 400, 400);
   pop();
   movimiento();
 }
@@ -70,19 +69,13 @@ function draw() {
 function movimiento () {
   if (keyIsPressed === true) {
     if (keyCode === LEFT_ARROW) {
-      //posXFondo--;
-      posXCirculos= posXCirculos+2;
-      posYCirculos= posYCirculos-2;
+      posXCuadrados= posXCuadrados-2;
     } else if (keyCode === RIGHT_ARROW) {
-      //posXFondo++;
-      posXCirculos= posXCirculos-2;
-      posYCirculos= posYCirculos+2;
+      posXCuadrados= posXCuadrados+2;
+    } else if (keyCode === UP_ARROW) {
+      posYCuadrados= posYCuadrados-2;
+    } else if (keyCode === DOWN_ARROW) {
+      posYCuadrados= posYCuadrados+2;
     }
-  }
-
-  if (mouseButton == LEFT && mouseX<width/2 && mouseY<height) {
-    posXFondo = 100;
-    posXCirculos = 426;
-    posYCirculos = 234;
   }
 }
