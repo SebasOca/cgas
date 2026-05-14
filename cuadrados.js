@@ -1,6 +1,6 @@
 function cuadrados() {
   push();
-  for (let j = 0; j < 180; j = j+10) {
+  for (let j = 0; j < 100; j = j+10) {
     lineaCuadrado(posXCuadrados+j, posYCuadrados, colorLineaArriba1, colorLineaMedio1, colorLineaAbajo1);
     lineaCuadrado(posXCuadrados+1+j, posYCuadrados, colorLineaArriba2, colorLineaMedio2, colorLineaAbajo2);
     lineaCuadrado(posXCuadrados+2+j, posYCuadrados, colorLineaArriba3, colorLineaMedio3, colorLineaAbajo3);
@@ -17,7 +17,7 @@ function cuadrados() {
 
 function lineaCuadrado(posX, posY, colorArriba, colorMedio, colorAbajo) {
   for (let x = 0; x < 1; x++) {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
       let intermedio = map(i, -50, 250, 0, 1);
 
       let degrade = lerpColor(colorArriba, colorMedio, intermedio);
