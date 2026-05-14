@@ -17,7 +17,7 @@ function cuadrados() {
 
 function lineaCuadrado(posX, posY, colorArriba, colorMedio, colorAbajo) {
   for (let x = 0; x < 1; x++) {
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 10; i++) {
       let intermedio = map(i, -50, 250, 0, 1);
 
       let degrade = lerpColor(colorArriba, colorMedio, intermedio);
