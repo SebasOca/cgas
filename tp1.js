@@ -1,4 +1,3 @@
-let obra;
 let colorLineaArriba1, colorLineaArriba2, colorLineaArriba3, colorLineaArriba4, colorLineaArriba5, colorLineaArriba6, colorLineaArriba7, colorLineaArriba8, colorLineaArriba9, colorLineaArriba10, colorLineaArriba11, colorLineaArriba12;
 let colorLineaMedio1, colorLineaMedio2, colorLineaMedio3, colorLineaMedio4, colorLineaMedio5, colorLineaMedio6, colorLineaMedio7, colorLineaMedio8, colorLineaMedio9, colorLineaMedio10, colorLineaMedio11, colorLineaMedio12;
 let colorLineaAbajo1, colorLineaAbajo2, colorLineaAbajo3, colorLineaAbajo4, colorLineaAbajo5, colorLineaAbajo6, colorLineaAbajo7, colorLineaAbajo8, colorLineaAbajo9, colorLineaAbajo10, colorLineaAbajo11, colorLineaAbajo12;
@@ -10,13 +9,6 @@ let posYCuadrados = 83;
 
 
 function preload() {
-  obra = loadImage("data/obra.png");
-}
-
-function setup() {
-  createCanvas (400, 400);
-  background('#222222');
-
   colorLineaArriba1 = color (113, 133, 103);
   colorLineaArriba2 = color (36, 76, 101);
   colorLineaArriba3 = color (21, 39, 38);
@@ -55,6 +47,11 @@ function setup() {
   colorLineaAbajo10 = color (34, 34, 12);
   colorLineaAbajo11 = color (124, 144, 98);
   colorLineaAbajo12 = color (30, 64, 83);
+}
+
+function setup() {
+  createCanvas (400, 400);
+  background('#222222');
 }
 
 function draw() {
