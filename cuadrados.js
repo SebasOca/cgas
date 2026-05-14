@@ -11,7 +11,7 @@ function cuadrados() {
     lineaCuadrado(posXCuadrados+7+j, posYCuadrados, colorLineaArriba8, colorLineaMedio8, colorLineaAbajo8);
     lineaCuadrado(posXCuadrados+8+j, posYCuadrados, colorLineaArriba9, colorLineaMedio9, colorLineaAbajo9);
     lineaCuadrado(posXCuadrados+9+j, posYCuadrados, colorLineaArriba10, colorLineaMedio10, colorLineaAbajo10);
-}
+  }
   pop();
 }
 
