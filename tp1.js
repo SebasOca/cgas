@@ -1,151 +1,110 @@
 let espaciado;
 let grosorLinea;
+let capas = [];
+let numCapas;
 
-// Guardamos las capas internas para poder redibujarlas con escala variable
-let capasInternas = [];
-let capaFondo = { c1: null, c2: null };
-let numCapasFondo = 1;
-
-// Escala de los rectángulos internos
-let escala = 1;
-let creciendo = false;
-let achicando = false;
-
+const paletas = [
+  ['#FFBD00', '#FF5400', '#00B4D8', '#03045E', '#9D4EDD'],
+  ['#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51'],
+  ['#0F4C5C', '#5F0F40', '#9A031E', '#FB8B24', '#E36414'],
+  ['#CCD5AE', '#E9EDC9', '#FEFAE0', '#D4A373', '#B5838D']
+];
 
 function setup() {
-  createCanvas(800, 800);
-  colorMode(HSB, 360, 100, 100, 1);
-  background(15);
+  createCanvas(1000, 1000);
+  colorMode(RGB, 255);
+  generarObra();
 }
 
 function draw() {
-  if (capasInternas.length > 0) {
-    if (creciendo) {
-      escala += 0.012;
-      _redibujar();
-    } else if (achicando) {
-      escala = max(0.05, escala - 0.012);
-      _redibujar();
-    }
-  }
-}
-
-
-function lineasFondo() {
-  numCapasFondo = floor(random(3, 6));
-
   background(15);
-  espaciado = floor(random(4, 7));
-  grosorLinea = (espaciado / numCapasFondo) * 0.9;
-  strokeWeight(grosorLinea);
-  strokeCap(SQUARE);
 
-  capaFondo = {
-    c1: color(random(360), random(80, 100), random(80, 100)),
-    c2: color(random(360), random(80, 100), random(80, 100))
-  };
-
-  let desfaseX = 0;
-  for (let x = 0; x < width; x += espaciado) {
-    let porcentaje = map(x, 0, width, 0, 1);
-    let colorLinea = lerpColor(capaFondo.c1, capaFondo.c2, porcentaje);
-    let posX = x + desfaseX;
-    stroke(colorLinea);
-    line(posX, 0, posX, height);
-  }
-}
-
-
-function cuadrosInternos() {
-  let numCapas = floor(random(2, 5));
-
-  grosorLinea = (espaciado / numCapas) * 0.9;
-  strokeWeight(grosorLinea);
-  strokeCap(SQUARE);
-
-  capasInternas = [];
-
-  for (let i = 1; i < numCapas; i++) {
-    let w = random(width * 0.3, width * 0.8);
-    let h = random(height * 0.3, height * 0.8);
-    let x = random(width * 0.1, width * 0.5);
-    let y = random(height * 0.1, height * 0.5);
-
-    capasInternas.push({
-      // Guardamos centro para escalar desde ahí
-      cx: x + w / 2,
-      cy: y + h / 2,
-      w: w,
-      h: h,
-      c1: color(random(360), random(70, 100), random(80, 100)),
-      c2: color(random(360), random(70, 100), random(80, 100))
-    });
+  if (keyIsDown(UP_ARROW)) { 
+    modificarTamano(1.02);
+  } else if (keyIsDown(DOWN_ARROW)) { 
+    modificarTamano(0.98);
   }
 
-  _dibujarCapasInternas();
-}
+  let estaPresionado = keyIsDown(77); // Tecla "M" para oscilar
 
+  for (let i = 0; i < capas.length; i++) {
+    let capa = capas[i];
 
-function _dibujarCapasInternas() {
-  let numCapas = capasInternas.length;
-  strokeWeight(grosorLinea);
-  strokeCap(SQUARE);
+    if (estaPresionado && i > 0) {
+      capa.x += sin(frameCount * 0.05 + i) * 2;
+      capa.y += cos(frameCount * 0.04 + i) * 1.5;
 
-  for (let i = 0; i < numCapas; i++) {
-    let capa = capasInternas[i];
-    let desfaseX = i * (espaciado / (numCapas + 1));
+      capa.x = constrain(capa.x, 10, width - capa.w - 10);
+      capa.y = constrain(capa.y, 10, height - capa.h - 10);
+    }
 
-    // Aplicar escala desde el centro del rectángulo
-    let w = capa.w * escala;
-    let h = capa.h * escala;
-    let x = capa.cx - w / 2;
-    let y = capa.cy - h / 2;
+    let desfaseX = i * (espaciado / numCapas);
 
-    for (let px = 0; px < width; px += espaciado) {
-      if (px >= x && px <= x + w) {
-        let porcentaje = map(px, x, x + w, 0, 1);
+    strokeWeight(grosorLinea);
+    strokeCap(SQUARE);
+
+    for (let x = 0; x < width; x += espaciado) {
+      if (x >= capa.x && x <= capa.x + capa.w) {
+
+        let porcentaje = map(x, capa.x, capa.x + capa.w, 0, 1);
         let colorLinea = lerpColor(capa.c1, capa.c2, porcentaje);
-        let posX = px + desfaseX;
+
         stroke(colorLinea);
-        if (posX <= width) {
-          line(posX, y, posX, y + h);
+        let posX_Linea = x + desfaseX;
+
+        if (posX_Linea <= width) {
+          line(posX_Linea, capa.y, posX_Linea, capa.y + capa.h);
         }
       }
     }
   }
 }
 
+function generarObra() {
+  espaciado = floor(random(4, 7));
+  numCapas = floor(random(4, 7));
+  grosorLinea = (espaciado / numCapas) * 0.9;
 
-function _redibujar() {
-  background(15);
-  strokeWeight(grosorLinea);
-  strokeCap(SQUARE);
+  capas = [];
 
-  // Redibujar fondo
-  for (let x = 0; x < width; x += espaciado) {
-    let porcentaje = map(x, 0, width, 0, 1);
-    let colorLinea = lerpColor(capaFondo.c1, capaFondo.c2, porcentaje);
-    stroke(colorLinea);
-    line(x, 0, x, height);
+  let paletaElegida = random(paletas);
+
+  // Capa Base
+  capas.push({
+    x: 0, y: 0, w: width, h: height,
+    c1: color(random(paletaElegida)),
+    c2: color(random(paletaElegida))
+  });
+
+  let margen = 50;
+
+  for (let i = 1; i < numCapas; i++) {
+    let posX = random(margen, width * 0.4);
+    let posY = random(margen, height * 0.4);
+    let anchoMax = (width - margen) - posX;
+    let altoMax = (height - margen) - posY;
+
+    capas.push({
+      x: posX,
+      y: posY,
+      w: random(width * 0.3, anchoMax),
+      h: random(height * 0.3, altoMax),
+      c1: color(random(paletaElegida)),
+      c2: color(random(paletaElegida))
+    });
   }
-
-  _dibujarCapasInternas();
 }
-
 
 function mousePressed() {
-  escala = 1;
-  lineasFondo();
-  cuadrosInternos();
+  generarObra();
 }
 
+function modificarTamano(factor) {
+  for (let i = 1; i < capas.length; i++) {
+    capas[i].w *= factor;
+    capas[i].h *= factor;
 
-function keyPressed() {
-  if (keyCode === UP_ARROW || key === '+') creciendo = true;
-  if (keyCode === DOWN_ARROW || key === '-') achicando = true;
-}
-
-function keyReleased() {
-  if (keyCode === UP_ARROW || key === '+') creciendo = false;
-  if (keyCode === DOWN_ARROW || key === '-') achicando = false;
+    capas[i].w = constrain(capas[i].w, 60, width * 0.5);
+    capas[i].h = constrain(capas[i].h, 60, height * 0.5);
+  }
 }
