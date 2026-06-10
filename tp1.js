@@ -11,7 +11,7 @@ const paletas = [
 ];
 
 function setup() {
-  createCanvas(1000, 1000);
+  createCanvas(800, 800);
   colorMode(RGB, 255);
   generarObra();
 }
