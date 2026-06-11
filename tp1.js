@@ -1,8 +1,3 @@
-// ============================================================
-//  TP1 — CONTROL POR VOZ
-//  Obra visual generativa controlada por micrófono
-// ============================================================
-//
 //  MAPA DE CONTROLES DE VOZ:
 //  ─────────────────────────────────────────────────────────
 //  GRAVE   (freq 100–150 Hz) → Aumenta tamaño  [↑]
@@ -10,41 +5,17 @@
 //  MUY GRAVE (freq < 100 Hz) → Temblor         [ESPACIO]
 //  FRECUENCIA ALTA (> 250 Hz)→ Movimiento ondulante [M]
 //  SILENCIO (≥ 7 seg)        → Regenerar obra  [click]
-//
-//  TECLAS DE RESPALDO (siguen funcionando):
-//  ↑ ↓  espacio  M   click
-// ============================================================
 
-// ──────────────────────────────────────────────────────────
-//  CONFIGURACIÓN DE SONIDO
-// ──────────────────────────────────────────────────────────
-
-// Amplitud — se calibra automáticamente. Estos son valores
-// de arranque conservadores; el sistema los ajusta en tiempo real.
 let AMP_MIN = 0.002;
 let AMP_MAX = 0.15;
 
-// Nota MIDI: Do3 (48) ≈ 131 Hz  — La4 (69) ≈ 440 Hz
-// Usamos notas MIDI porque el GestorSenial trabaja en escala lineal.
-// Rango de interés: ~60 Hz (nota 35) — ~350 Hz (nota 77)
 let NOTA_MIN = 35;   // ≈  62 Hz  (extremo grave útil)
 let NOTA_MAX = 77;   // ≈ 392 Hz  (extremo agudo útil)
 
-// Umbral de amplitud para considerar que "hay sonido"
+
 let UMBRAL_SONIDO = 0.08;
+let UMBRAL_SILENCIO_LARGO = 7000;
 
-// Silencio prolongado → regenerar obra (en milisegundos)
-let UMBRAL_SILENCIO_LARGO = 7000; // 7 segundos
-
-// ──────────────────────────────────────────────────────────
-//  RANGOS DE FRECUENCIA → ACCIONES
-//  (expresados en Hz reales para claridad)
-//
-//  < 100 Hz  → temblor
-//  100–150 Hz → aumentar tamaño
-//  200–250 Hz → reducir tamaño
-//  > 250 Hz  → movimiento ondulante
-// ──────────────────────────────────────────────────────────
 const FREC_TEMBLOR_MAX   = 100;
 const FREC_GRAVE_MIN     = 100;
 const FREC_GRAVE_MAX     = 150;
@@ -52,9 +23,7 @@ const FREC_AGUDO_MIN     = 200;
 const FREC_AGUDO_MAX     = 250;
 const FREC_MOVIMIENTO_MIN = 250;
 
-// ──────────────────────────────────────────────────────────
-//  VARIABLES DE AUDIO
-// ──────────────────────────────────────────────────────────
+
 let mic;
 let pitch;
 let audioIniciado = false;
@@ -62,26 +31,23 @@ let audioIniciado = false;
 const MODEL_URL =
   "https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/";
 
-// Valores crudos del micrófono
 let amp  = 0;
 let frec = 0;
 let notaMidi = 0;
 
-// Gestores (suavizan y normalizan la señal)
 let gestorAmp;
 let gestorFrec;
 
-// Valores procesados
-let intensidad = 0; // amplitud suavizada, rango 0–1
-let altura     = 0; // pitch suavizado, rango 0–1
-let frecActual = 0; // frecuencia en Hz reconstruida desde notaMidi
 
-// Calibración automática de amplitud
+let intensidad = 0;
+let altura     = 0;
+let frecActual = 0;
+
 let pisoAmp  = Infinity;
 let techoAmp = -Infinity;
-let calibrandoAmp = true; // siempre activo al inicio
+let calibrandoAmp = true;
 
-// Detección de sonido / silencio
+
 let haySonido         = false;
 let antesHabiaSonido  = false;
 let empezoElSonido    = false;
@@ -91,15 +57,13 @@ let marcaInicioSonido = 0;
 let marcaFinSonido    = 0;
 let durSilencio       = 0;
 
-// Flags de acción por voz (activos mientras la condición se cumple)
-let vozGrave      = false; // aumentar tamaño
-let vozAgudo      = false; // reducir tamaño
-let vozTemblor    = false; // temblor (muy grave)
-let vozMovimiento = false; // movimiento ondulante (agudo alto)
 
-// ──────────────────────────────────────────────────────────
-//  VARIABLES DE LA OBRA (igual que el original)
-// ──────────────────────────────────────────────────────────
+let vozGrave      = false;
+let vozAgudo      = false;
+let vozTemblor    = false;
+let vozMovimiento = false;
+
+
 let espaciado;
 let grosorLinea;
 let capas = [];
@@ -114,26 +78,20 @@ const paletas = [
 
 let intensidadTemblor = 0;
 
-// ──────────────────────────────────────────────────────────
-//  SETUP
-// ──────────────────────────────────────────────────────────
+
 function setup() {
   createCanvas(800, 800);
   colorMode(RGB, 255);
 
-  // Inicializar gestores de señal
+  
   gestorAmp  = new GestorSenial(AMP_MIN,  AMP_MAX);
   gestorFrec = new GestorSenial(NOTA_MIN, NOTA_MAX);
 
   generarObra();
 }
 
-// ──────────────────────────────────────────────────────────
-//  DRAW — bucle principal
-// ──────────────────────────────────────────────────────────
-function draw() {
 
-  // ── Pantalla de espera antes de que el usuario active el mic ──
+function draw() {
   if (!audioIniciado) {
     background(15);
     fill(255);
@@ -147,44 +105,37 @@ function draw() {
     return;
   }
 
-  // ── Análisis de audio ──
   analizarAudio();
 
-  // ── Acciones por voz (reemplazan a los botones) ──
   let aumentarTamanio  = vozGrave      || keyIsDown(UP_ARROW);
   let reducirTamanio   = vozAgudo      || keyIsDown(DOWN_ARROW);
-  let temblorActivo    = vozTemblor    || keyIsDown(32);   // 32 = espacio
-  let movimientoActivo = vozMovimiento || keyIsDown(77);   // 77 = M
+  let temblorActivo    = vozTemblor    || keyIsDown(32);
+  let movimientoActivo = vozMovimiento || keyIsDown(77);
 
-  // ── Lógica de tamaño ──
   if (aumentarTamanio) {
     modificarTamano(1.02);
   } else if (reducirTamanio) {
     modificarTamano(0.98);
   }
 
-  // ── Lógica de temblor ──
+
   if (temblorActivo) {
     intensidadTemblor = min(intensidadTemblor + 0.3, 12);
   } else {
     intensidadTemblor = max(intensidadTemblor - 0.5, 0);
   }
 
-  // ── Silencio largo → regenerar obra (equivale a mousePressed) ──
   if (!haySonido && durSilencio >= UMBRAL_SILENCIO_LARGO) {
     generarObra();
-    // Reinicia el contador para no regenerar cada frame
     marcaFinSonido = millis();
     durSilencio    = 0;
   }
 
-  // ── Dibujo de capas ──
   background(15);
 
   for (let i = 0; i < capas.length; i++) {
     let capa = capas[i];
 
-    // Movimiento ondulante
     if (movimientoActivo && i > 0) {
       capa.x += sin(frameCount * 0.05 + i) * 2;
       capa.y += cos(frameCount * 0.04 + i) * 1.5;
@@ -216,35 +167,25 @@ function draw() {
       }
     }
   }
-
-  // ── HUD de monitoreo (pulsar H para ocultar) ──
+  
   if (mostrarHUD) {
     dibujarHUD();
   }
 }
 
-// ──────────────────────────────────────────────────────────
-//  ANÁLISIS DE AUDIO
-//  Lee el micrófono, actualiza gestores y determina qué
-//  acción de voz está activa según la frecuencia detectada.
-// ──────────────────────────────────────────────────────────
+
 function analizarAudio() {
-
   amp = mic.getLevel();
-
-  // Calibración automática de rango de amplitud
   if (calibrandoAmp) {
     pisoAmp  = min(pisoAmp,  amp);
     techoAmp = max(techoAmp, amp);
-    // Actualizar el gestor con los extremos capturados
-    gestorAmp.minimo = pisoAmp  + 0.0001; // evitar división por cero
+    gestorAmp.minimo = pisoAmp  + 0.0001;
     gestorAmp.maximo = max(techoAmp, pisoAmp + 0.01);
   }
 
   gestorAmp.actualizar(amp);
   intensidad = gestorAmp.filtrada;
 
-  // Determinar si hay sonido
   haySonido        = intensidad > UMBRAL_SONIDO;
   empezoElSonido   = haySonido && !antesHabiaSonido;
   terminoElSonido  = !haySonido && antesHabiaSonido;
@@ -264,24 +205,18 @@ function analizarAudio() {
 
   antesHabiaSonido = haySonido;
 
-  // ── Reconstruir frecuencia en Hz desde nota MIDI suavizada ──
-  // notaMidi se actualiza asincrónicamente desde getPitch()
   gestorFrec.actualizar(notaMidi);
   altura = gestorFrec.filtrada;
 
-  // El GestorSenial normaliza entre NOTA_MIN y NOTA_MAX.
-  // Deshacer la normalización para obtener Hz.
   let notaMidiSuavizada = map(altura, 0, 1, NOTA_MIN, NOTA_MAX);
   frecActual = (notaMidi > 0) ? midiToFreq(notaMidiSuavizada) : 0;
 
-  // ── Clasificar acción según rango de frecuencia ──
   if (haySonido && frecActual > 0) {
     vozTemblor    = frecActual <  FREC_TEMBLOR_MAX;
     vozGrave      = frecActual >= FREC_GRAVE_MIN     && frecActual < FREC_GRAVE_MAX;
     vozAgudo      = frecActual >= FREC_AGUDO_MIN     && frecActual < FREC_AGUDO_MAX;
     vozMovimiento = frecActual >= FREC_MOVIMIENTO_MIN;
   } else {
-    // Sin sonido: apagar todos los controles de voz
     vozTemblor    = false;
     vozGrave      = false;
     vozAgudo      = false;
@@ -289,9 +224,7 @@ function analizarAudio() {
   }
 }
 
-// ──────────────────────────────────────────────────────────
-//  HUD DE MONITOREO
-// ──────────────────────────────────────────────────────────
+
 let mostrarHUD = true;
 
 function dibujarHUD() {
@@ -317,7 +250,7 @@ function dibujarHUD() {
   text("Silencio: " + (durSilencio / 1000).toFixed(1) +
        " s  /  " + (UMBRAL_SILENCIO_LARGO / 1000) + " s", 10, 70);
 
-  // Indicadores de acción
+
   let y = 94;
   fill(col(vozTemblor || keyIsDown(32)));
   text(tick(vozTemblor || keyIsDown(32)) +
@@ -347,9 +280,7 @@ function dibujarHUD() {
   pop();
 }
 
-// ──────────────────────────────────────────────────────────
-//  GENERACIÓN DE OBRA (igual que el original)
-// ──────────────────────────────────────────────────────────
+
 function generarObra() {
   espaciado  = floor(random(4, 7));
   numCapas   = floor(random(4, 7));
@@ -391,9 +322,7 @@ function modificarTamano(factor) {
   }
 }
 
-// ──────────────────────────────────────────────────────────
-//  INICIO DE AUDIO (requiere gesto del usuario)
-// ──────────────────────────────────────────────────────────
+
 async function iniciarAudio() {
   if (audioIniciado) return;
   try {
@@ -413,9 +342,7 @@ async function iniciarAudio() {
   }
 }
 
-// ──────────────────────────────────────────────────────────
-//  DETECCIÓN DE PITCH (ML5 — CREPE)
-// ──────────────────────────────────────────────────────────
+
 function startPitch() {
   pitch = ml5.pitchDetection(
     MODEL_URL,
@@ -439,18 +366,16 @@ function getPitch() {
       frec     = 0;
       notaMidi = 0;
     }
-    getPitch(); // loop asincrónico
+    getPitch();
   });
 }
 
-// ──────────────────────────────────────────────────────────
-//  EVENTOS DE ENTRADA
-// ──────────────────────────────────────────────────────────
+
 function mousePressed() {
   if (!audioIniciado) {
     iniciarAudio();
   } else {
-    generarObra(); // comportamiento original: regenerar al hacer click
+    generarObra();
   }
 }
 
@@ -464,7 +389,6 @@ function keyPressed() {
     mostrarHUD = !mostrarHUD;
   }
   if (key === "c" || key === "C") {
-    // Reinicia calibración de amplitud
     pisoAmp  = Infinity;
     techoAmp = -Infinity;
     calibrandoAmp = true;
