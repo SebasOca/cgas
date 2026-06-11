@@ -10,6 +10,9 @@ const paletas = [
   ['#CCD5AE', '#E9EDC9', '#FEFAE0', '#D4A373', '#B5838D']
 ];
 
+// Intensidad del temblor (0 = sin temblor, aumenta al mantener espacio)
+let intensidadTemblor = 0;
+
 function setup() {
   createCanvas(800, 800);
   colorMode(RGB, 255);
@@ -19,13 +22,20 @@ function setup() {
 function draw() {
   background(15);
 
-  if (keyIsDown(UP_ARROW)) { 
+  if (keyIsDown(UP_ARROW)) {
     modificarTamano(1.02);
-  } else if (keyIsDown(DOWN_ARROW)) { 
+  } else if (keyIsDown(DOWN_ARROW)) {
     modificarTamano(0.98);
   }
 
-  let estaPresionado = keyIsDown(77); // Tecla "M" para oscilar
+  // Espacio: acumula intensidad de temblor mientras se mantiene
+  if (keyIsDown(32)) {
+    intensidadTemblor = min(intensidadTemblor + 0.3, 12);
+  } else {
+    intensidadTemblor = max(intensidadTemblor - 0.5, 0); // suelta gradualmente
+  }
+
+  let estaPresionado = keyIsDown(77); // M para oscilar
 
   for (let i = 0; i < capas.length; i++) {
     let capa = capas[i];
@@ -33,7 +43,6 @@ function draw() {
     if (estaPresionado && i > 0) {
       capa.x += sin(frameCount * 0.05 + i) * 2;
       capa.y += cos(frameCount * 0.04 + i) * 1.5;
-
       capa.x = constrain(capa.x, 10, width - capa.w - 10);
       capa.y = constrain(capa.y, 10, height - capa.h - 10);
     }
@@ -48,12 +57,16 @@ function draw() {
 
         let porcentaje = map(x, capa.x, capa.x + capa.w, 0, 1);
         let colorLinea = lerpColor(capa.c1, capa.c2, porcentaje);
-
         stroke(colorLinea);
-        let posX_Linea = x + desfaseX;
+
+        // Temblor: desplazamiento aleatorio en X e Y solo en capas internas
+        let temX = (i > 0 && intensidadTemblor > 0) ? random(-intensidadTemblor, intensidadTemblor) : 0;
+        let temY = (i > 0 && intensidadTemblor > 0) ? random(-intensidadTemblor * 0.5, intensidadTemblor * 0.5) : 0;
+
+        let posX_Linea = x + desfaseX + temX;
 
         if (posX_Linea <= width) {
-          line(posX_Linea, capa.y, posX_Linea, capa.y + capa.h);
+          line(posX_Linea, capa.y + temY, posX_Linea, capa.y + capa.h + temY);
         }
       }
     }
@@ -64,12 +77,13 @@ function generarObra() {
   espaciado = floor(random(4, 7));
   numCapas = floor(random(4, 7));
   grosorLinea = (espaciado / numCapas) * 0.9;
+  intensidadTemblor = 0;
 
   capas = [];
 
   let paletaElegida = random(paletas);
 
-  // Capa Base
+  // Capa base
   capas.push({
     x: 0, y: 0, w: width, h: height,
     c1: color(random(paletaElegida)),
@@ -103,7 +117,6 @@ function modificarTamano(factor) {
   for (let i = 1; i < capas.length; i++) {
     capas[i].w *= factor;
     capas[i].h *= factor;
-
     capas[i].w = constrain(capas[i].w, 60, width * 0.5);
     capas[i].h = constrain(capas[i].h, 60, height * 0.5);
   }
