@@ -69,6 +69,12 @@ let grosorLinea;
 let capas = [];
 let numCapas;
 
+let intensidadTemblor = 0;
+
+let mostrarHUD = true;
+
+
+
 const paletas = [
   ['#FFBD00', '#FF5400', '#00B4D8', '#03045E', '#9D4EDD'],
   ['#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51'],
@@ -76,11 +82,9 @@ const paletas = [
   ['#CCD5AE', '#E9EDC9', '#FEFAE0', '#D4A373', '#B5838D']
 ];
 
-let intensidadTemblor = 0;
-
 
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(1100, 850);
   colorMode(RGB, 255);
 
   
@@ -93,14 +97,14 @@ function setup() {
 
 function draw() {
   if (!audioIniciado) {
-    background(15);
+    background(10, 10, 10);
     fill(255);
     noStroke();
     textAlign(CENTER, CENTER);
     textSize(22);
-    text("Hacé click o tocá la pantalla para\nactivar el micrófono", width / 2, height / 2);
-    textSize(13);
-    fill(150);
+    text("Clickeá la pantalla para activar el micrófono", width / 2, height / 2);
+    textSize(16);
+    fill(180);
     text("La obra se controla con la voz", width / 2, height / 2 + 60);
     return;
   }
@@ -131,7 +135,7 @@ function draw() {
     durSilencio    = 0;
   }
 
-  background(15);
+  background(10, 10, 10);
 
   for (let i = 0; i < capas.length; i++) {
     let capa = capas[i];
@@ -225,57 +229,50 @@ function analizarAudio() {
 }
 
 
-let mostrarHUD = true;
-
 function dibujarHUD() {
   push();
   fill(0, 0, 0, 170);
+  strokeCap(ROUND);
+  rect(0, 50, 280, 220, 0, 24, 24, 24);
   noStroke();
-  rect(0, 0, 260, 220, 0, 0, 8, 0);
-
   textAlign(LEFT, BASELINE);
-  textSize(11);
+  
 
   let col  = (v) => v ? color(80, 255, 120) : color(100);
   let tick = (v) => v ? "●" : "○";
 
   fill(180);
-  text("CONTROL POR VOZ  [H para ocultar]", 10, 18);
+  textSize(14);
+  text("Control por voz  (H para ocultar)", 20, 78);
+
+  textSize(11);
 
   fill(200);
-  text("Amp:  " + amp.toFixed(4) +
-       "  |  Intensidad: " + intensidad.toFixed(2), 10, 38);
-  text("Frec: " + frecActual.toFixed(1) + " Hz" +
-       "  |  MIDI: " + notaMidi.toFixed(1), 10, 54);
-  text("Silencio: " + (durSilencio / 1000).toFixed(1) +
-       " s  /  " + (UMBRAL_SILENCIO_LARGO / 1000) + " s", 10, 70);
+  text("Amp:  " + amp.toFixed(4) + "  |  Intensidad: " + intensidad.toFixed(2), 20, 98);
+  text("Frec: " + frecActual.toFixed(1) + " Hz" + "  |  MIDI: " + notaMidi.toFixed(1), 20, 1014);
+  text("Silencio: " + (durSilencio / 1000).toFixed(1) + " s  /  " + (UMBRAL_SILENCIO_LARGO / 1000) + " s", 20, 130);
 
 
   let y = 94;
   fill(col(vozTemblor || keyIsDown(32)));
-  text(tick(vozTemblor || keyIsDown(32)) +
-       "  TEMBLOR     < " + FREC_TEMBLOR_MAX + " Hz  [espacio]", 10, y);
+  text(tick(vozTemblor || keyIsDown(32)) + "  TEMBLOR     < " + FREC_TEMBLOR_MAX + " Hz  [espacio]", 20, y + 62);
 
   y += 18;
   fill(col(vozGrave || keyIsDown(UP_ARROW)));
-  text(tick(vozGrave || keyIsDown(UP_ARROW)) +
-       "  TAMAÑO +    " + FREC_GRAVE_MIN + "–" + FREC_GRAVE_MAX + " Hz  [↑]", 10, y);
+  text(tick(vozGrave || keyIsDown(UP_ARROW)) + "  TAMAÑO +    " + FREC_GRAVE_MIN + "–" + FREC_GRAVE_MAX + " Hz  [↑]", 20, y + 64);
 
   y += 18;
   fill(col(vozAgudo || keyIsDown(DOWN_ARROW)));
-  text(tick(vozAgudo || keyIsDown(DOWN_ARROW)) +
-       "  TAMAÑO -    " + FREC_AGUDO_MIN + "–" + FREC_AGUDO_MAX + " Hz  [↓]", 10, y);
+  text(tick(vozAgudo || keyIsDown(DOWN_ARROW)) + "  TAMAÑO -    " + FREC_AGUDO_MIN + "–" + FREC_AGUDO_MAX + " Hz  [↓]", 20, y + 66);
 
   y += 18;
   fill(col(vozMovimiento || keyIsDown(77)));
-  text(tick(vozMovimiento || keyIsDown(77)) +
-       "  MOVIMIENTO  > " + FREC_MOVIMIENTO_MIN + " Hz  [M]", 10, y);
+  text(tick(vozMovimiento || keyIsDown(77)) + "  MOVIMIENTO  > " + FREC_MOVIMIENTO_MIN + " Hz  [M]", 20, y + 68);
 
   y += 18;
   let silLargo = (!haySonido && durSilencio >= UMBRAL_SILENCIO_LARGO * 0.5);
   fill(col(silLargo));
-  text(tick(silLargo) +
-       "  REGENERAR   silencio " + (UMBRAL_SILENCIO_LARGO / 1000) + " s  [click]", 10, y);
+  text(tick(silLargo) + "  REGENERAR   silencio " + (UMBRAL_SILENCIO_LARGO / 1000) + " s  [click]", 20, y + 70);
 
   pop();
 }
@@ -291,15 +288,15 @@ function generarObra() {
   let paletaElegida = random(paletas);
 
   capas.push({
-    x: 0, y: 0, w: width, h: height,
+    x: 300, y: 50, w: width, h: height,
     c1: color(random(paletaElegida)),
     c2: color(random(paletaElegida))
   });
 
   let margen = 50;
   for (let i = 1; i < numCapas; i++) {
-    let posX    = random(margen, width  * 0.4);
-    let posY    = random(margen, height * 0.4);
+    let posX    = random(margen + 300, width  * 0.4);
+    let posY    = random(margen + 50, height * 0.4);
     let anchoMax = (width  - margen) - posX;
     let altoMax  = (height - margen) - posY;
 
