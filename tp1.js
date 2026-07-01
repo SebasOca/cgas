@@ -28,8 +28,7 @@ let mic;
 let pitch;
 let audioIniciado = false;
 
-const MODEL_URL =
-  "https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/";
+const MODEL_URL = "https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/";
 
 let amp  = 0;
 let frec = 0;
@@ -76,10 +75,10 @@ let mostrarHUD = true;
 
 
 const paletas = [
-  ['#FFBD00', '#FF5400', '#00B4D8', '#03045E', '#9D4EDD'],
-  ['#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51'],
-  ['#0F4C5C', '#5F0F40', '#9A031E', '#FB8B24', '#E36414'],
-  ['#CCD5AE', '#E9EDC9', '#FEFAE0', '#D4A373', '#B5838D']
+  ['#fbc83d', '#fb732f', '#26c0df', '#17186d', '#a96add'],
+  ['#365f6f', '#35a497', '#E9C46A', '#F4A261', '#E76F51'],
+  ['#1d697b', '#741d53', '#a81f39', '#FB8B24', '#e06c23'],
+  ['#CCD5AE', '#E9EDC9', '#faf3c7', '#D4A373', '#B5838D']
 ];
 
 
@@ -162,7 +161,7 @@ function draw() {
         let temX = (i > 0 && intensidadTemblor > 0)
           ? random(-intensidadTemblor, intensidadTemblor) : 0;
         let temY = (i > 0 && intensidadTemblor > 0)
-          ? random(-intensidadTemblor * 0.5, intensidadTemblor * 0.5) : 0;
+          ? random(-intensidadTemblor * 0.005, intensidadTemblor * 0.005) : 0;
 
         let posX_Linea = x + desfaseX + temX;
         if (posX_Linea <= width) {
@@ -274,6 +273,8 @@ function dibujarHUD() {
   fill(col(silLargo));
   text(tick(silLargo) + "  REGENERAR   silencio " + (UMBRAL_SILENCIO_LARGO / 1000) + " s  [click]", 20, y + 70);
 
+  
+
   pop();
 }
 
@@ -281,7 +282,7 @@ function dibujarHUD() {
 function generarObra() {
   espaciado  = floor(random(4, 7));
   numCapas   = floor(random(4, 7));
-  grosorLinea = (espaciado / numCapas) * 0.9;
+  grosorLinea = (espaciado / numCapas) * 2;
   intensidadTemblor = 0;
   capas = [];
 
@@ -314,8 +315,8 @@ function modificarTamano(factor) {
   for (let i = 1; i < capas.length; i++) {
     capas[i].w *= factor;
     capas[i].h *= factor;
-    capas[i].w = constrain(capas[i].w, 60, width  * 0.5);
-    capas[i].h = constrain(capas[i].h, 60, height * 0.5);
+    capas[i].w = constrain(capas[i].w, 150, width  * 0.5);
+    capas[i].h = constrain(capas[i].h, 150, height * 0.5);
   }
 }
 
